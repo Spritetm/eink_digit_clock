@@ -1,0 +1,25 @@
+Drill report for eink_digit_clk.kicad_pcb
+Created on Wed 28 Feb 2024 09:18:27 PM +08
+
+Copper Layer Stackup:
+    =============================================================
+    L1 :  F.Cu                      front
+    L2 :  B.Cu                      back
+
+
+Drill file 'eink_digit_clk-PTH.drl' contains
+    plated through holes:
+    =============================================================
+    T1  0.400mm  0.0157"  (39 holes)
+    T2  0.600mm  0.0236"  (4 holes)  (with 4 slots)
+    T3  1.000mm  0.0394"  (2 holes)
+
+    Total plated holes count 45
+
+
+Drill file 'eink_digit_clk-NPTH.drl' contains
+    unplated through holes:
+    =============================================================
+    T1  0.650mm  0.0256"  (2 holes)
+
+    Total unplated holes count 2
