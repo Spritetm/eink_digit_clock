@@ -77,7 +77,7 @@ static void EPD_W21_WriteCMD(uint8_t cmd) {
 }
 
 //UC8253
-void EPD_Init(void) { 
+void EPD_Init(void) {
 	EPD_W21_Rst(0);    // Module reset
 	delay(10);//At least 10ms delay 
 	EPD_W21_Rst(1);

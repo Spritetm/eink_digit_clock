@@ -2427,6 +2427,10 @@
     (effects (font (size 1.27 1.27)) (justify left bottom))
     (uuid 7e2c7366-c0ab-45d5-90ce-2e15de35ac54)
   )
+  (text "Issue: GPIO8\nshould be high\nfor download mode" (at 176.53 114.3 0)
+    (effects (font (size 1.27 1.27)) (justify left bottom))
+    (uuid f5bcf18a-ad5c-431c-b35d-606416d8c76f)
+  )
 
   (global_label "EPD_VGH" (shape input) (at 240.665 36.195 0) (fields_autoplaced)
     (effects (font (size 1.27 1.27)) (justify left))

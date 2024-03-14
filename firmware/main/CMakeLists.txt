@@ -1,8 +1,7 @@
 # Set usual component variables
-set(app_sources "main.c")
+set(app_sources "main.c" "waittime.c")
 
 idf_component_register(SRCS ${app_sources}
-                       REQUIRES ulp
                        WHOLE_ARCHIVE)
 
 #
