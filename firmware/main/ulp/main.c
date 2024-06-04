@@ -1,7 +1,10 @@
 /*
- * SPDX-FileCopyrightText: 2023 Espressif Systems (Shanghai) CO LTD
- *
- * SPDX-License-Identifier: Unlicense OR CC0-1.0
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
  */
 #include <stdint.h>
 #include <stdbool.h>
@@ -28,14 +31,14 @@ int32_t woke_ntp_sync;
 int32_t show_error; //1 if we need to show the battery empty icon and then sleep
 
 static uint64_t x_lp_timer_hal_get_cycle_count(void) {
-    lp_timer_ll_counter_snapshot(&LP_TIMER);
-    uint32_t lo = lp_timer_ll_get_counter_value_low(&LP_TIMER, 0);
-    uint32_t hi = lp_timer_ll_get_counter_value_high(&LP_TIMER, 0);
-    lp_timer_counter_value_t result = {
-        .lo = lo,
-        .hi = hi
-    };
-    return result.val;
+	lp_timer_ll_counter_snapshot(&LP_TIMER);
+	uint32_t lo = lp_timer_ll_get_counter_value_low(&LP_TIMER, 0);
+	uint32_t hi = lp_timer_ll_get_counter_value_high(&LP_TIMER, 0);
+	lp_timer_counter_value_t result = {
+		.lo = lo,
+		.hi = hi
+	};
+	return result.val;
 }
 
 
@@ -50,12 +53,14 @@ int main(void) {
 		while(1);
 	}
 
+	//Calculate digit we need to show...
 	int digit=0;
 	if (id==0) digit=mins%10;
 	if (id==1) digit=mins/10;
 	if (id==2) digit=hours%10;
 	if (id==3) digit=hours/10;
 
+	//...and show it. Unless it's 0, we want a partial refresh.
 	if (digit==0 || first_run) {
 		EPD_Init();
 	} else {
@@ -109,7 +114,6 @@ int main(void) {
 	if (hours>=24) {
 		hours-=24;
 	}
-
 
 	if (!first_run) {
 		wake_time += (sleep_duration_us * (1 << RTC_CLK_CAL_FRACT) / clk_ll_rtc_slow_load_cal());

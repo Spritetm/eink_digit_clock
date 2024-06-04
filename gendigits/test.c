@@ -4,6 +4,7 @@
 #include "font_decode.h"
 #include "font_digits.h"
 
+//Small test program to check if the font decodes correctly.
 
 int w=240;
 int h=416;

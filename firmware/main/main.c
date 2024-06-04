@@ -1,3 +1,13 @@
+//Main logic. This does the synchronization with NTP/ESPNow and sets up the ULP.
+
+/*
+ * ----------------------------------------------------------------------------
+ * "THE BEER-WARE LICENSE" (Revision 42):
+ * Jeroen Domburg <jeroen@spritesmods.com> wrote this file. As long as you retain 
+ * this notice you can do whatever you want with this stuff. If we meet some day, 
+ * and you think this stuff is worth it, you can buy me a beer in return. 
+ * ----------------------------------------------------------------------------
+ */
 #include <stdio.h>
 #include <inttypes.h>
 #include "esp_sleep.h"
@@ -36,12 +46,13 @@ How Does This Work?
 On startup, each digit performs a sync of the current time via NTP. This gives an initial
 idea of time without the other digits needing to be awake.
 
-Every 24 hours, the digits will do an internal sync. The master (10s of hours) module
-will wake up, do a NTP sync, then broadcast timestamps over esp-now every second for a
+Every 24 hours, the digits will do an internal sync. Before this, at 20:00, the 
+master (10s of hours) module will wake up, do a NTP sync. It will then
+wake up again at midnight and broadcast timestamps over esp-now every second for a
 minute. The rest of the modules will wake up as well, listen for the timestamp data, send
 an ack if received and go back to sleep as soon as they're synced. The master will go
-back to sleep a soon as it received all acks, or after 10 seconds. If a module can't sync,
-it'll fallback to NTP sync.
+back to sleep a soon as it received all acks, or after the 10 seconds have expired. If 
+a module can't sync, it'll fallback to NTP sync.
 */
 
 extern const uint8_t ulp_main_bin_start[] asm("_binary_ulp_main_bin_start");
@@ -67,6 +78,7 @@ void cb_connection_ok(void *pvParameter){
 
 SemaphoreHandle_t got_time_sem;
 
+//NTP time sync callback
 void time_sync_notification_cb(struct timeval *tv) {
 	xSemaphoreGive(got_time_sem);
 }
@@ -122,7 +134,6 @@ int do_espnow_sync(int id) {
     ESP_ERROR_CHECK(esp_wifi_start());
 	ESP_ERROR_CHECK(esp_wifi_set_channel(CHANNEL, WIFI_SECOND_CHAN_NONE));
 	ESP_ERROR_CHECK(esp_now_init());
-//	ESP_ERROR_CHECK(esp_now_register_send_cb(example_espnow_send_cb));
 	ESP_ERROR_CHECK(esp_now_register_recv_cb(espnow_recv_cb));
 	esp_now_peer_info_t peer={
 		.channel = CHANNEL,
@@ -197,6 +208,7 @@ void lp_init() {
 	ESP_ERROR_CHECK(ulp_lp_core_load_binary(ulp_main_bin_start, (ulp_main_bin_end - ulp_main_bin_start)));
 }
 
+//Checks if the battery is empty. Returns true if it is depleted.
 int battery_empty() {
 	adc_oneshot_unit_handle_t adc1_handle;
 	adc_oneshot_unit_init_cfg_t init_config1 = {
@@ -228,6 +240,7 @@ int battery_empty() {
 #define ERROR_BAT 1
 #define ERROR_RTC 2
 
+//Instruct the ULP to show an error, then go into deep sleep.
 void show_error(int err) {
 	ulp_show_error=err;
 	ulp_lp_core_cfg_t cfg = {
@@ -240,6 +253,7 @@ void show_error(int err) {
 
 
 //This forces the time to 64 seconds to midnight if set to 1.
+//Useful for testing synchronization over ESPNow.
 #define TEST_SYNC 0
 
 void app_main(void) {
@@ -353,7 +367,7 @@ void app_main(void) {
 	};
 	ESP_ERROR_CHECK(ulp_lp_core_run(&cfg));
 
-/*
+#if 0
 	//Rather than sleep, print LP variables
 	ESP_LOGI(TAG, "Entering deep sleep for %lld sec", (to_wait_us/1000000));
 	while(1) {
@@ -361,7 +375,7 @@ void app_main(void) {
 		printf("wait until %lld cur %lld\n", *wake_time, lp_timer_hal_get_cycle_count());
 		vTaskDelay(pdMS_TO_TICKS(1000));
 	}
-*/
+#endif
 
 	/* Go back to sleep, only the ULP will run */
 	ESP_LOGI(TAG, "Entering deep sleep for %lld sec", (to_wait_us/1000000));
