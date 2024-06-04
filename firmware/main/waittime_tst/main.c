@@ -1,7 +1,12 @@
+/*
+ Simple test program to validate the wait_time_us_for_digit() function does
+ the right time for any input.
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
 #include "../waittime.h"
+
 
 int main() {
 	for (int h=0; h<24; h++) {

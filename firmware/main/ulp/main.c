@@ -24,6 +24,8 @@ static int old_digit; //for partial erase
 uint64_t wake_time;
 int32_t id;
 int32_t first_run;
+int32_t woke_ntp_sync;
+int32_t show_error; //1 if we need to show the battery empty icon and then sleep
 
 static uint64_t x_lp_timer_hal_get_cycle_count(void) {
     lp_timer_ll_counter_snapshot(&LP_TIMER);
@@ -38,6 +40,16 @@ static uint64_t x_lp_timer_hal_get_cycle_count(void) {
 
 
 int main(void) {
+	if (show_error) {
+		//Show error warning and never wake up.
+		EPD_Init();
+		EPD_Digit(old_digit, 9+show_error);
+		EPD_DeepSleep();
+		lp_timer_ll_set_target_enable(&LP_TIMER, 1, false);
+		ulp_lp_core_halt();
+		while(1);
+	}
+
 	int digit=0;
 	if (id==0) digit=mins%10;
 	if (id==1) digit=mins/10;
@@ -53,6 +65,12 @@ int main(void) {
 	EPD_DeepSleep();
 	old_digit=digit;
 	
+
+	if (hours==0 && mins==0 && !first_run) {
+		//midnight: wake up for espnow sync
+		ulp_lp_core_wakeup_main_processor();
+	}
+	
 	//Note: for some reason, any sleep duration <22 sec will be rounded up to 22 sec.
 	int64_t sleep_duration_us;
 	if (id==0) {
@@ -60,14 +78,25 @@ int main(void) {
 		mins++;
 	} else if (id==1) {
 		sleep_duration_us=10*60*1000*1000ULL;
+		mins=(mins/10)*10;
 		mins+=10;
 	} else if (id==2) {
 		sleep_duration_us=60*60*1000*1000ULL;
 		hours++;
+		mins=0;
 	} else { //id==3
-		if (hours<20) {
+		mins=0;
+		if (hours<10) {
 			sleep_duration_us=10*60*60*1000*1000ULL;
 			hours+=10;
+		} else if (hours<20) {
+			sleep_duration_us=10*60*60*1000*1000ULL;
+			hours+=10;
+			if (!first_run) {
+				//we wake up at 20:00 hours and need to do an ntp sync
+				woke_ntp_sync=1;
+				ulp_lp_core_wakeup_main_processor();
+			}
 		} else {
 			sleep_duration_us=4*60*60*1000*1000ULL;
 			hours=0;
@@ -80,6 +109,7 @@ int main(void) {
 	if (hours>=24) {
 		hours-=24;
 	}
+
 
 	if (!first_run) {
 		wake_time += (sleep_duration_us * (1 << RTC_CLK_CAL_FRACT) / clk_ll_rtc_slow_load_cal());

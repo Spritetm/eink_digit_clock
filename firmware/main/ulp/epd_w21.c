@@ -9,6 +9,11 @@
 
 #define EPD_ARRAY ((240*416)/8)
 
+//Main program can set this to indicate some sort of error that still keeps the
+//clock working
+int credit_dot;
+static int old_credit_dot;
+
 static inline void EPD_W21_Rst(int v) {
 	ulp_lp_core_gpio_set_level(IO_EPD_RESET, v);
 }
@@ -178,15 +183,22 @@ void EPD_Digit(int oldDigit, int newDigit) {
 	//Write Data
 	font_digit_reset(font_digits[oldDigit]);
 	EPD_W21_WriteCMD(0x10);        //Transfer old data
-	for(int i=0;i<EPD_ARRAY;i++) {
+	int n=font_digit_get_byte();
+	if (old_credit_dot) n=old_credit_dot;
+	EPD_W21_WriteDATA(n);
+	for(int i=1;i<EPD_ARRAY;i++) {
 		EPD_W21_WriteDATA(font_digit_get_byte());  //Transfer the actual displayed data
 	}
 	font_digit_reset(font_digits[newDigit]);
 	EPD_W21_WriteCMD(0x13);        //Transfer new data
-	for(int i=0;i<EPD_ARRAY;i++) {
+	n=font_digit_get_byte();
+	if (credit_dot) n=credit_dot;
+	EPD_W21_WriteDATA(n);
+	for(int i=1;i<EPD_ARRAY;i++) {
 		EPD_W21_WriteDATA(font_digit_get_byte());  //Transfer the actual displayed data
 	}
 	EPD_Update();
+	old_credit_dot=credit_dot;
 	Power_off();
 }
 
