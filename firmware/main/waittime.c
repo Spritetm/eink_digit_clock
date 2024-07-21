@@ -1,3 +1,4 @@
+// Figure out how long to wait until a given digit of the time changes.
 /*
  * ----------------------------------------------------------------------------
  * "THE BEER-WARE LICENSE" (Revision 42):
